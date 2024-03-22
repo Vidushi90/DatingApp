@@ -1,50 +1,42 @@
 ﻿using System.Security.Cryptography;
 using System.Text;
 using API.Data;
+using API.DTOs;
 using API.Entites;
+using API.Interfaces;
+using AutoMapper;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
 namespace API;
 
-[Authorize]
+
 public class UsersController : BaseApiController
 {
-    private readonly DataContext _context;
-    public UsersController(DataContext context)
+    private readonly IUserRepository _userRepository;
+    private readonly IMapper _mapper;
+    public UsersController(IUserRepository userRepository,
+    IMapper mapper)
     {
-        this._context = context;
+        _userRepository = userRepository;
+        _mapper = mapper;
     }
 
-    [AllowAnonymous]
     [HttpGet]
-    public async Task<ActionResult<IEnumerable<AppUser>>> GetUsers() {
-        var users = await this._context.Users.ToListAsync();
-        return users;
+    public async Task<ActionResult<IEnumerable<MemberDto>>> GetUsers()
+    {
+        var users = await _userRepository.GetMemberAsync();
+
+        return Ok(users);
     }
 
-    [HttpGet("{id}")]
-    public async Task<ActionResult<AppUser>> GetUser(int id) {
-        return await this._context.Users.FindAsync(id);
-    }
-
-    [HttpPost("register")]
-    public async Task<ActionResult<AppUser>> Register(string userName, string password) {
-
-        using var hmac = new HMACSHA512();
-
-        var user = new AppUser {
-            UserName = userName,
-            PasswordHash = hmac.ComputeHash(Encoding.UTF8.GetBytes(password)),
-            PasswordSalt = hmac.Key
-        };
-
-        _context.Users.Add(user);
-        await _context.SaveChangesAsync();
-
-        return user;
+    [HttpGet("{username}")]
+    public async Task<ActionResult<MemberDto>> GetUser(string username)
+    {
+        return await _userRepository.GetMemberDtoAsync(username);
 
     }
+
 
 }
