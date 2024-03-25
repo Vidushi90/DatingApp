@@ -11,7 +11,6 @@ using Microsoft.EntityFrameworkCore;
 
 namespace API;
 
-
 public class UsersController : BaseApiController
 {
     private readonly IUserRepository _userRepository;
